@@ -1,0 +1,19 @@
+name: Auto Tag Additional Semantic tags
+
+on:
+  push:
+    tags:
+      - "*"
+
+permissions:
+  contents: write
+
+jobs:
+  auto_tag:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Add Semantic Tags
+        uses: silte/actions/auto-tag-additional-semantic-version@main
+        with:
+          TAG_PREFIX: "v"
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

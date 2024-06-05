@@ -1,0 +1,73 @@
+name: "Auto tag additional semantic version"
+description: "Add additional tags to the pushed tag based on the major and minor version."
+
+inputs:
+  TAG_PREFIX:
+    description: "The prefix that exists before semantic version tag."
+    required: false
+    default: ""
+  GITHUB_TOKEN:
+    description: "The GitHub token to push the additional tags."
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Generate additional tags
+      shell: bash
+      id: generate_tags
+      env:
+        PREFIX: ${{ inputs.TAG_PREFIX }}
+      run: |
+        # Extract the major and minor version from the pushed tag
+        TAG_WITH_PREFIX=$(echo "${GITHUB_REF}" | sed "s/refs\/tags\///")
+        TAG_VERSION=$(echo "${TAG_WITH_PREFIX}" | sed "s/${PREFIX}//")
+
+        MAJOR_MINOR_VERSION=$PREFIX$(echo "${TAG_VERSION}" | cut -d '.' -f 1-2)
+        MAJOR_VERSION=$PREFIX$(echo "${TAG_VERSION}" | cut -d '.' -f 1)
+
+        # Check if the tag is in the semantic versioning format
+        if [[ "${TAG_VERSION}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+          # Create additional tags
+          echo "Creating additional tags: ${MAJOR_VERSION} and ${MAJOR_MINOR_VERSION}"
+
+          echo "MAJOR_VERSION=${MAJOR_VERSION}" >> $GITHUB_OUTPUT
+          echo "MAJOR_MINOR_VERSION=${MAJOR_MINOR_VERSION}" >> $GITHUB_OUTPUT
+        else
+          echo "The pushed tag $TAG_WITH_PREFIX is not in the semantic versioning format. Skipping..."
+        fi
+
+    - name: Push additional tags
+      shell: bash
+      if: steps.generate_tags.outputs.MAJOR_VERSION && steps.generate_tags.outputs.MAJOR_MINOR_VERSION
+      env:
+        MAJOR_VERSION: ${{ steps.generate_tags.outputs.MAJOR_VERSION }}
+        MAJOR_MINOR_VERSION: ${{ steps.generate_tags.outputs.MAJOR_MINOR_VERSION }}
+
+      run: |
+        git fetch --force --tags
+
+        git config user.name "GitHub Actions"
+        git config user.email "github-actions@users.noreply.github.com"
+
+        # Remove existings tags
+        if git rev-parse $MAJOR_VERSION >/dev/null 2>&1; then
+          git tag -d $MAJOR_VERSION
+          git push https://${{ inputs.GITHUB_TOKEN }}@github.com/${{ github.repository }} :refs/tags/$MAJOR_VERSION
+        fi
+
+        if git rev-parse $MAJOR_MINOR_VERSION >/dev/null 2>&1; then
+          git tag -d $MAJOR_MINOR_VERSION
+          git push https://${{ inputs.GITHUB_TOKEN }}@github.com/${{ github.repository }} :refs/tags/$MAJOR_MINOR_VERSION
+        fi
+
+
+
+        # Add tags
+        git tag $MAJOR_VERSION
+        git tag $MAJOR_MINOR_VERSION
+
+        git push https://${{ inputs.GITHUB_TOKEN }}@github.com/${{ github.repository }} --tags

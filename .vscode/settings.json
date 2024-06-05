@@ -1,0 +1,8 @@
+{
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.formatOnSave": true,
+  "files.associations": {
+    "*.yaml": "github-actions-workflow"
+  },
+  "cSpell.words": ["postversion", "silte"]
+}
