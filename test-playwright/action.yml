@@ -5,9 +5,20 @@ inputs:
   SHARD:
     description: "Shard number e.g. 1"
     required: true
+
   SHARD_COUNT:
     description: "Total number of shards e.g. 5"
     required: true
+
+  TEST_COMMAND:
+    description: "The command to run the tests"
+    required: false
+    default: "npm run test"
+
+  BLOB_REPORT_LOCATION:
+    description: "The location of the blob report"
+    required: false
+    default: "blob-report/"
 
 runs:
   using: "composite"
@@ -17,11 +28,11 @@ runs:
       run: npx playwright install --with-deps
     - name: Run Playwright tests
       shell: bash
-      run: npm run e2e:test -- --shard ${{ inputs.SHARD }}/${{ inputs.SHARD_COUNT }}
+      run: ${{ inputs.TEST_COMMAND }} -- --shard ${{ inputs.SHARD }}/${{ inputs.SHARD_COUNT }}
 
     - uses: actions/upload-artifact@v4
       if: always()
       with:
         name: playwright-blob-shard-${{ inputs.SHARD }}
-        path: packages/playwright/blob-report/
+        path: ${{ inputs.BLOB_REPORT_LOCATION }}
         retention-days: 7
