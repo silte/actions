@@ -32,6 +32,11 @@ inputs:
     description: "Docker build arguments"
     required: false
 
+  PUBLISH:
+    description: "Publish the image"
+    required: false
+    default: "true"
+
 runs:
   using: "composite"
   steps:
@@ -72,7 +77,7 @@ runs:
       uses: docker/build-push-action@v5
       with:
         platforms: ${{ inputs.DOCKER_TARGET_PLATFORMS }}
-        push: false
+        push: ${{ inputs.PUBLISH }}
         cache-from: type=gha
         cache-to: type=gha,mode=max
         file: ${{ inputs.DOCKERFILE_PATH }}
