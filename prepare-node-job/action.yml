@@ -1,0 +1,40 @@
+name: "Prepare node job"
+description: "Checkout the repository, install NodeJS and install NPM dependencies."
+
+inputs:
+  NODE_AUTH_TOKEN:
+    description: "NPM token"
+    required: false
+
+  ADDITIONAL_CACHE_PATHS:
+    description: "Additional cache paths"
+    required: false
+
+  ADDITIONAL_CACHE_KEY_PATHS:
+    description: "Additional cache keys"
+    required: false
+
+runs:
+  using: "composite"
+  steps:
+    - uses: actions/checkout@v4
+
+    - uses: actions/setup-node@v4
+      with:
+        node-version-file: ".nvmrc"
+
+    - uses: actions/cache@v4
+      if: always()
+      id: restore-cache
+      with:
+        path: |
+          **/node_modules
+          ${{ inputs.ADDITIONAL_CACHE_PATHS }}
+        key: ${{ runner.os }}-modules-${{ hashFiles('./package-lock.json', inputs.ADDITIONAL_CACHE_KEY_PATHS) }}
+
+    - name: Install dependencies
+      if: steps.restore-cache.outputs.cache-hit != 'true'
+      shell: bash
+      run: npm ci
+      env:
+        NODE_AUTH_TOKEN: ${{ inputs.NODE_AUTH_TOKEN }}

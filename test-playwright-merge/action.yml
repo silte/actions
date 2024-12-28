@@ -1,0 +1,41 @@
+name: Merge playwright test reports
+description: Merge playwright test reports
+
+# Usage:
+# merge-reports:
+#   if: always()
+#   needs: run-e2e-tests
+
+#   runs-on: ubuntu-latest
+#   steps:
+#     - name: Merge test report artifacts
+#      uses: silte/actions/merge-playwright-reports@v1
+
+runs:
+  using: "composite"
+  steps:
+    - name: Merge Artifacts
+      uses: actions/upload-artifact/merge@v4
+      with:
+        name: playwright-blob-reports
+        pattern: playwright-blob-shard-*
+        delete-merged: true
+
+    - uses: silte/actions/prepare-node-job@v1
+
+    - name: Download blob reports from GitHub Actions Artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: playwright-blob-reports
+        path: playwright-blob-reports
+
+    - name: Merge into Playwright reports
+      shell: bash
+      run: npx playwright merge-reports --reporter html,github ./playwright-blob-reports
+
+    - name: Upload HTML report
+      uses: actions/upload-artifact@v4
+      with:
+        name: playwright-html-report--attempt-${{ github.run_attempt }}
+        path: playwright-report
+        retention-days: 14
