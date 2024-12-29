@@ -1,0 +1,50 @@
+name: "Build"
+description: "Build Node.js application"
+
+inputs:
+  BUILD_COMMAND:
+    description: "Command to build the application"
+    required: false
+    default: "npm run build"
+
+  BUILD_FILES:
+    description: "Files to cache"
+    required: false
+    default: "./build"
+
+  BUILD_SOURCE_FILES:
+    description: "Source files to build"
+    required: false
+    default: "./src"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Parse build name
+      id: parse_build_name
+      shell: "bash"
+      run: |
+        # Set the build name based on BUILD_SOURCE_FILES
+        # If BUILD_SOURCE_FILES is "./src", set artifact_name to "build"
+        # Otherwise, replace "/" with "-" in BUILD_SOURCE_FILES and set artifact_name to "build-BUILD_SOURCE_FILES"
+        if [ "${{ inputs.BUILD_SOURCE_FILES }}" == "./src" ]; then
+          echo "build_name=build" >> $GITHUB_ENV
+        else
+          sanitized_build_source="${{ inputs.BUILD_SOURCE_FILES }}"
+          sanitized_build_source="${sanitized_build_source//\//-}"
+          echo "build_name=build-${sanitized_build_source}" >> $GITHUB_ENV
+        fi
+
+    - uses: actions/cache@v4
+      id: restore-cache
+      with:
+        path: ${{ inputs.BUILD_FILES }}
+        key: ${{ runner.os }}-${{ env.build_name }}-${{ hashFiles('./package-lock.json', inputs.BUILD_SOURCE_FILES) }}
+
+    - name: Build app
+      if: steps.restore-cache.outputs.cache-hit != 'true'
+      shell: bash
+      run: |
+        mkdir -p ${{ inputs.BUILD_FILES }}
+        rm -rf ${{ inputs.BUILD_FILES }}
+        ${{ inputs.BUILD_COMMAND }}
