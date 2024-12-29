@@ -92,8 +92,8 @@ jobs:
           context: ${{ inputs.DOCKER_CONTEXT }}
           platforms: ${{ inputs.DOCKER_TARGET_PLATFORMS }}
           push: ${{ inputs.PUBLISH }}
-          cache-from: ${{ inputs.BUILD_CACHE == 'true' && 'type=gha' || '' }}
-          cache-to: ${{ inputs.BUILD_CACHE == 'true' && 'type=gha,mode=max' || '' }}
+          cache-from: ${{ inputs.BUILD_CACHE && 'type=gha' || '' }}
+          cache-to: ${{ inputs.BUILD_CACHE && 'type=gha,mode=max' || '' }}
           file: ${{ inputs.DOCKERFILE_PATH }}
           tags: |
             ${{ steps.build-tags.outputs.BUILD_NUMBER }}
