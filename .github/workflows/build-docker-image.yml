@@ -43,6 +43,11 @@ on:
         required: false
         default: true
         type: boolean
+      BUILD_CACHE:
+        description: "Option to use cache for build, by default it is enabled"
+        required: false
+        default: true
+        type: boolean
 
 jobs:
   build:
@@ -87,8 +92,8 @@ jobs:
           context: ${{ inputs.DOCKER_CONTEXT }}
           platforms: ${{ inputs.DOCKER_TARGET_PLATFORMS }}
           push: ${{ inputs.PUBLISH }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: ${{ inputs.BUILD_CACHE == 'true' && 'type=gha' || '' }}
+          cache-to: ${{ inputs.BUILD_CACHE == 'true' && 'type=gha,mode=max' || '' }}
           file: ${{ inputs.DOCKERFILE_PATH }}
           tags: |
             ${{ steps.build-tags.outputs.BUILD_NUMBER }}
