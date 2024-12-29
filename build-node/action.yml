@@ -12,7 +12,7 @@ inputs:
     required: false
     default: "./build"
 
-  BUILD_SOURCE_FILES:
+  PACKAGE_ROOT:
     description: "Source files to build"
     required: false
     default: "./src"
@@ -24,13 +24,13 @@ runs:
       id: parse_build_name
       shell: "bash"
       run: |
-        # Set the build name based on BUILD_SOURCE_FILES
-        # If BUILD_SOURCE_FILES is "./src", set artifact_name to "build"
-        # Otherwise, replace "/" with "-" in BUILD_SOURCE_FILES and set artifact_name to "build-BUILD_SOURCE_FILES"
-        if [ "${{ inputs.BUILD_SOURCE_FILES }}" == "./src" ]; then
+        # Set the build name based on PACKAGE_ROOT
+        # If PACKAGE_ROOT is "./src", set artifact_name to "build"
+        # Otherwise, replace "/" with "-" in PACKAGE_ROOT and set artifact_name to "build-PACKAGE_ROOT"
+        if [ "${{ inputs.PACKAGE_ROOT }}" == "./src" ]; then
           echo "build_name=build" >> $GITHUB_ENV
         else
-          sanitized_build_source="${{ inputs.BUILD_SOURCE_FILES }}"
+          sanitized_build_source="${{ inputs.PACKAGE_ROOT }}"
           sanitized_build_source="${sanitized_build_source//\//-}"
           echo "build_name=build-${sanitized_build_source}" >> $GITHUB_ENV
         fi
@@ -39,7 +39,7 @@ runs:
       id: restore-cache
       with:
         path: ${{ inputs.BUILD_FILES }}
-        key: ${{ runner.os }}-${{ env.build_name }}-${{ hashFiles('./package-lock.json', inputs.BUILD_SOURCE_FILES) }}
+        key: ${{ runner.os }}-${{ env.build_name }}-${{ hashFiles('./package-lock.json', inputs.PACKAGE_ROOT) }}
 
     - name: Build app
       if: steps.restore-cache.outputs.cache-hit != 'true'
