@@ -1,6 +1,6 @@
 {
   "name": "silte-common-actions",
-  "version": "2.1.2",
+  "version": "2.2.0",
   "description": "Shareable common github actions",
   "repository": {
     "type": "git",
