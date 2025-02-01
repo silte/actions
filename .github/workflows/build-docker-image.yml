@@ -6,6 +6,10 @@ on:
       DOCKER_REGISTRY_PASSWORD:
         description: "Docker registry password"
         required: true
+      DOCKER_BUILD_ARGS:
+        description: "Docker build arguments"
+        required: false
+
     inputs:
       DOCKER_REGISTRY:
         description: "Docker registry"
@@ -101,3 +105,4 @@ jobs:
             ${{ steps.build-tags.outputs.LATEST }}
           build-args: |
             ${{ inputs.DOCKER_BUILD_ARGS }}
+            ${{ secrets.DOCKER_BUILD_ARGS || '' }}
